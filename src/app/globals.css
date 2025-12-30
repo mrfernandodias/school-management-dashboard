@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  overflow: hidden;
+}
+
 .react-calendar {
   border: none !important;
   font-family: 'Inter', sans-serif !important;
