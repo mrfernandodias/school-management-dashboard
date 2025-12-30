@@ -1,11 +1,18 @@
-import Image from "next/image";
+import Image from 'next/image';
 
 const Navbar = () => {
   return (
     <div className="flex items-center justify-between p-4">
       {/* SEARCH BAR */}
-      <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2">
-        <Image src="/search.png" alt="Search" width={14} height={14} />
+      <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2 transition-all hover:ring-gray-400">
+        <Image
+          src="/search.png"
+          alt="Search"
+          width={14}
+          height={14}
+          draggable={false}
+          className="select-none"
+        />
         <input
           type="text"
           name="search"
@@ -16,11 +23,25 @@ const Navbar = () => {
       </div>
       {/* ICONS AND USER */}
       <div className="flex items-center gap-6 justify-end w-full">
-        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
-          <Image src="/message.png" alt="Messages" width={20} height={20} />
+        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
+          <Image
+            src="/message.png"
+            alt="Messages"
+            width={20}
+            height={20}
+            draggable={false}
+            className="select-none"
+          />
         </div>
-        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative">
-          <Image src="/announcement.png" alt="Announcements" width={20} height={20} />
+        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative hover:bg-gray-100 transition-colors">
+          <Image
+            src="/announcement.png"
+            alt="Announcements"
+            width={20}
+            height={20}
+            draggable={false}
+            className="select-none"
+          />
           <div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-purple-500 text-white rounded-full text-xs">
             1
           </div>
@@ -34,7 +55,8 @@ const Navbar = () => {
           alt="User"
           width={36}
           height={36}
-          className="rounded-full cursor-pointer"
+          draggable={false}
+          className="rounded-full cursor-pointer hover:ring-2 hover:ring-lamaPurple transition-all select-none"
         />
       </div>
     </div>

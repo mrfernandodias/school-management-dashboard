@@ -22,8 +22,18 @@ export default function DashboardLayout({
     <div className="h-screen flex">
       {/* LEFT */}
       <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] p-4">
-        <Link href="/" className="flex items-center justify-center lg:justify-start gap-2">
-          <Image src="/logo.png" alt="Logo" width={32} height={32} />
+        <Link
+          href="/"
+          className="flex items-center justify-center lg:justify-start gap-2 hover:opacity-80 transition-opacity"
+        >
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={32}
+            height={32}
+            draggable={false}
+            className="select-none"
+          />
           <span className="hidden lg:block font-bold">FDS School</span>
         </Link>
         <Menu />

@@ -56,12 +56,19 @@ const EventCalendar = () => {
         <div className="mt-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-lg font-semibold">Upcoming Events</h1>
-            <Image src="/moreDark.png" alt="" width={20} height={20} />
+            <Image
+              src="/moreDark.png"
+              alt=""
+              width={20}
+              height={20}
+              draggable={false}
+              className="select-none cursor-pointer hover:opacity-70 transition-opacity"
+            />
           </div>
           <div className="flex flex-col gap-4">
             {events.map(event => (
               <div
-                className="p-4 rounded-md border-2 border-gray-100 border-t-4 odd:border-t-lamaSky even:border-t-lamaPurple"
+                className="p-4 rounded-md border-2 border-gray-100 border-t-4 odd:border-t-lamaSky even:border-t-lamaPurple hover:shadow-sm transition-shadow cursor-pointer"
                 key={event.id}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -94,7 +101,10 @@ const EventCalendar = () => {
                   day: 'numeric',
                 })}
               </h2>
-              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700 text-2xl">
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-700 text-2xl transition-colors hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"
+              >
                 ✕
               </button>
             </div>
