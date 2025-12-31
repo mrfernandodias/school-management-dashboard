@@ -4,6 +4,7 @@ import TableSearch from '@/components/TableSearch';
 import Image from 'next/image';
 import { role, resultsData } from '@/lib/data';
 import Link from 'next/link';
+import FormModal from '@/components/FormModal';
 
 const columns = [
   { header: 'Subject Name', accessor: 'name' },
@@ -56,16 +57,10 @@ const ResultListPage = () => {
               </button>
             </Link>
             {role === 'admin' && (
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
-                <Image
-                  src="/delete.png"
-                  alt="Delete"
-                  width={14}
-                  height={14}
-                  draggable={false}
-                  className="select-none"
-                />
-              </button>
+              <>
+                <FormModal table="result" type="update" id={item.id} />
+                <FormModal table="result" type="delete" id={item.id} />
+              </>
             )}
           </div>
         </td>
@@ -101,16 +96,7 @@ const ResultListPage = () => {
                 className="select-none"
               />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow hover:scale-105 transition-transform">
-              <Image
-                src="/plus.png"
-                alt=""
-                width={14}
-                height={14}
-                draggable={false}
-                className="select-none"
-              />
-            </button>
+            {role === 'admin' && <FormModal table="result" type="create" />}
           </div>
         </div>
       </div>

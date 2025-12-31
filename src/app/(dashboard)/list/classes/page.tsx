@@ -4,6 +4,7 @@ import TableSearch from '@/components/TableSearch';
 import Image from 'next/image';
 import { role, classesData } from '@/lib/data';
 import Link from 'next/link';
+import FormModal from '@/components/FormModal';
 
 const columns = [
   { header: 'Class Name', accessor: 'name' },
@@ -34,29 +35,11 @@ const SubjectListPage = () => {
         <td className=" hidden md:table-cell">{item.supervisor}</td>
         <td className="">
           <div className="flex items-center gap-2">
-            <Link href={`/list/classes/${item.id}`}>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
-                <Image
-                  src="/view.png"
-                  alt="View"
-                  width={14}
-                  height={14}
-                  draggable={false}
-                  className="select-none"
-                />
-              </button>
-            </Link>
             {role === 'admin' && (
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
-                <Image
-                  src="/delete.png"
-                  alt="Delete"
-                  width={14}
-                  height={14}
-                  draggable={false}
-                  className="select-none"
-                />
-              </button>
+              <>
+                <FormModal table="class" type="update" id={item.id} />
+                <FormModal table="class" type="delete" id={item.id} />
+              </>
             )}
           </div>
         </td>
@@ -92,16 +75,7 @@ const SubjectListPage = () => {
                 className="select-none"
               />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow hover:scale-105 transition-transform">
-              <Image
-                src="/plus.png"
-                alt=""
-                width={14}
-                height={14}
-                draggable={false}
-                className="select-none"
-              />
-            </button>
+            {role === 'admin' && <FormModal table="class" type="create" />}
           </div>
         </div>
       </div>

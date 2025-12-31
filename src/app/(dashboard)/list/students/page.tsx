@@ -4,6 +4,7 @@ import TableSearch from '@/components/TableSearch';
 import Image from 'next/image';
 import { role, studentsData } from '@/lib/data';
 import Link from 'next/link';
+import FormModal from '@/components/FormModal';
 
 const columns = [
   { header: 'Info', accessor: 'info' },
@@ -58,26 +59,15 @@ const StudentListPage = () => {
                   <Image
                     src="/view.png"
                     alt="View"
-                    width={14}
-                    height={14}
+                    width={16}
+                    height={16}
                     draggable={false}
                     className="select-none"
                   />
                 </button>
               </Link>
             )}
-            {role === 'admin' && (
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
-                <Image
-                  src="/delete.png"
-                  alt="Delete"
-                  width={14}
-                  height={14}
-                  draggable={false}
-                  className="select-none"
-                />
-              </button>
-            )}
+            {role === 'admin' && <FormModal table="student" type="delete" id={student.id} />}
           </div>
         </td>
       </tr>
@@ -112,16 +102,7 @@ const StudentListPage = () => {
                 className="select-none"
               />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow hover:scale-105 transition-transform">
-              <Image
-                src="/plus.png"
-                alt=""
-                width={14}
-                height={14}
-                draggable={false}
-                className="select-none"
-              />
-            </button>
+            {role === 'admin' && <FormModal table="student" type="create" />}
           </div>
         </div>
       </div>

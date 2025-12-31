@@ -4,6 +4,7 @@ import TableSearch from '@/components/TableSearch';
 import Image from 'next/image';
 import { role, eventsData } from '@/lib/data';
 import Link from 'next/link';
+import FormModal from '@/components/FormModal';
 
 const columns = [
   { header: 'Event Name', accessor: 'name' },
@@ -37,29 +38,11 @@ const EventListPage = () => {
         <td className=" hidden md:table-cell">{item.endTime}</td>
         <td className="">
           <div className="flex items-center gap-2">
-            <Link href={`/list/events/${item.id}`}>
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
-                <Image
-                  src="/edit.png"
-                  alt="Edit"
-                  width={14}
-                  height={14}
-                  draggable={false}
-                  className="select-none"
-                />
-              </button>
-            </Link>
             {role === 'admin' && (
-              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaPurple">
-                <Image
-                  src="/delete.png"
-                  alt="Delete"
-                  width={14}
-                  height={14}
-                  draggable={false}
-                  className="select-none"
-                />
-              </button>
+              <>
+                <FormModal table="event" type="update" id={item.id} />
+                <FormModal table="event" type="delete" id={item.id} />
+              </>
             )}
           </div>
         </td>
@@ -95,16 +78,7 @@ const EventListPage = () => {
                 className="select-none"
               />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow hover:scale-105 transition-transform">
-              <Image
-                src="/plus.png"
-                alt=""
-                width={14}
-                height={14}
-                draggable={false}
-                className="select-none"
-              />
-            </button>
+            {role === 'admin' && <FormModal table="event" type="create" />}
           </div>
         </div>
       </div>
