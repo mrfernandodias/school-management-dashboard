@@ -1,10 +1,13 @@
+import { Parent, Prisma, Student } from '@prisma/client';
+import Image from 'next/image';
+import { redirect } from 'next/navigation';
+import FormModal from '@/components/FormModal';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
-import Image from 'next/image';
-import { role, parentsData } from '@/lib/data';
-import Link from 'next/link';
-import FormModal from '@/components/FormModal';
+import { role } from '@/lib/data';
+import prisma from '@/lib/prisma';
+import { ITEMS_PER_PAGE } from '@/lib/settings';
 
 const columns = [
   { header: 'Info', accessor: 'info' },
@@ -14,49 +17,89 @@ const columns = [
   { header: 'Actions', accessor: 'actions', className: 'hidden md:table-cell' },
 ];
 
-type Parent = {
-  id: number;
-  name: string;
-  students: string[];
-  email?: string;
-  phone: string;
-  address: string;
+type ParentList = Parent & { students: Student[] };
+
+const renderRow = (parent: ParentList) => {
+  return (
+    <tr
+      key={parent.id}
+      className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
+    >
+      <td className="flex items-center gap-4 p-4">
+        <div className="flex flex-col">
+          <h3 className="font-semibold ">{parent.name}</h3>
+          <p className="text-xs text-gray-500">{parent.email}</p>
+        </div>
+      </td>
+
+      <td className=" hidden md:table-cell">
+        <div className="flex flex-wrap gap-1">
+          {parent.students.map(student => student.name).join(', ')}
+        </div>
+      </td>
+
+      <td className=" hidden md:table-cell">{parent.phone}</td>
+      <td className=" hidden md:table-cell">{parent.address}</td>
+      <td className="">
+        <div className="flex items-center gap-2">
+          {role === 'admin' && (
+            <>
+              <FormModal table="parent" type="update" id={parent.id} />
+              <FormModal table="parent" type="delete" id={parent.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
 };
 
-const ParentListPage = () => {
-  const renderRow = (parent: Parent) => {
-    return (
-      <tr
-        key={parent.id}
-        className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
-      >
-        <td className="flex items-center gap-4 p-4">
-          <div className="flex flex-col">
-            <h3 className="font-semibold ">{parent.name}</h3>
-            <p className="text-xs text-gray-500">{parent.email}</p>
-          </div>
-        </td>
+const ParentListPage = async ({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) => {
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(Array.isArray(page) ? page[0] : page) : 1;
 
-        <td className=" hidden md:table-cell">
-          <div className="flex flex-wrap gap-1">{parent.students.join(', ')}</div>
-        </td>
+  // URL Params Conditions
+  const query: Prisma.ParentWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case 'search':
+            query.name = { contains: value as string, mode: 'insensitive' };
+            break;
+        }
+      }
+    }
+  }
 
-        <td className=" hidden md:table-cell">{parent.phone}</td>
-        <td className=" hidden md:table-cell">{parent.address}</td>
-        <td className="">
-          <div className="flex items-center gap-2">
-            {role === 'admin' && (
-              <>
-                <FormModal table="parent" type="update" id={parent.id} />
-                <FormModal table="parent" type="delete" id={parent.id} />
-              </>
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+  // ⚠️ Validar se página é um número válido
+  if (isNaN(p) || p < 1) {
+    redirect('/list/parents');
+  }
 
+  const [data, count] = await prisma.$transaction([
+    prisma.parent.findMany({
+      where: query,
+      include: {
+        students: true,
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (p - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.parent.count({ where: query }),
+  ]);
+
+  // 🔒 Calcular total de páginas
+  const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+
+  // 🚫 Redirecionar se página não existe
+  if (p > totalPages && totalPages > 0) {
+    redirect('/list/parents?page=' + totalPages);
+  }
   return (
     <div className="bg-white p-4 rounded-md m-4 mt-0">
       {/* TOP */}
@@ -91,10 +134,10 @@ const ParentListPage = () => {
       </div>
 
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={parentsData} />
+      <Table columns={columns} renderRow={renderRow} data={data} />
 
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={p} count={count} />
     </div>
   );
 };

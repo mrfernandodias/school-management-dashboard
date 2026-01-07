@@ -1,10 +1,13 @@
+import { Class, Prisma, Teacher } from '@prisma/client';
+import Image from 'next/image';
+import { redirect } from 'next/navigation';
+import FormModal from '@/components/FormModal';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
-import Image from 'next/image';
-import { role, classesData } from '@/lib/data';
-import Link from 'next/link';
-import FormModal from '@/components/FormModal';
+import { role } from '@/lib/data';
+import prisma from '@/lib/prisma';
+import { ITEMS_PER_PAGE } from '@/lib/settings';
 
 const columns = [
   { header: 'Class Name', accessor: 'name' },
@@ -14,39 +17,86 @@ const columns = [
   { header: 'Actions', accessor: 'actions', className: 'hidden md:table-cell' },
 ];
 
-type Class = {
-  id: number;
-  name: string;
-  capacity: number;
-  grade: string;
-  supervisor: string;
+type ClassList = Class & { supervisor: Teacher };
+
+const renderRow = (item: ClassList) => {
+  return (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
+    >
+      <td className="flex items-center gap-4 p-4">{item.name}</td>
+      <td className=" hidden md:table-cell">{item.capacity}</td>
+      <td className=" hidden md:table-cell">{item.name[0]}</td>
+      <td className=" hidden md:table-cell">
+        {item.supervisor.name + ' ' + item.supervisor.surname}
+      </td>
+      <td className="">
+        <div className="flex items-center gap-2">
+          {role === 'admin' && (
+            <>
+              <FormModal table="class" type="update" id={item.id} />
+              <FormModal table="class" type="delete" id={item.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
 };
 
-const SubjectListPage = () => {
-  const renderRow = (item: Class) => {
-    return (
-      <tr
-        key={item.id}
-        className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
-      >
-        <td className="flex items-center gap-4 p-4">{item.name}</td>
-        <td className=" hidden md:table-cell">{item.capacity}</td>
-        <td className=" hidden md:table-cell">{item.grade}</td>
-        <td className=" hidden md:table-cell">{item.supervisor}</td>
-        <td className="">
-          <div className="flex items-center gap-2">
-            {role === 'admin' && (
-              <>
-                <FormModal table="class" type="update" id={item.id} />
-                <FormModal table="class" type="delete" id={item.id} />
-              </>
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+const SubjectListPage = async ({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) => {
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(Array.isArray(page) ? page[0] : page) : 1;
 
+  // URL Params Conditions
+  const query: Prisma.ClassWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case 'supervidorId':
+            query.supervisorId = value as string;
+            break;
+          case 'search':
+            query.name = { contains: value as string, mode: 'insensitive' };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  // ⚠️ Validar se página é um número válido
+  if (isNaN(p) || p < 1) {
+    redirect('/list/classes');
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.class.findMany({
+      where: query,
+      include: {
+        supervisor: true,
+        grade: true,
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (p - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.class.count({ where: query }),
+  ]);
+
+  // 🔒 Calcular total de páginas
+  const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+
+  // 🚫 Redirecionar se página não existe
+  if (p > totalPages && totalPages > 0) {
+    redirect('/list/classes?page=' + totalPages);
+  }
   return (
     <div className="bg-white p-4 rounded-md m-4 mt-0">
       {/* TOP */}
@@ -81,10 +131,10 @@ const SubjectListPage = () => {
       </div>
 
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={classesData} />
+      <Table columns={columns} renderRow={renderRow} data={data} />
 
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={p} count={count} />
     </div>
   );
 };

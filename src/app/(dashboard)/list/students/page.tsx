@@ -1,10 +1,14 @@
+import { Class, Prisma, Student } from '@prisma/client';
+import Image from 'next/image';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import FormModal from '@/components/FormModal';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
-import Image from 'next/image';
-import { role, studentsData } from '@/lib/data';
-import Link from 'next/link';
-import FormModal from '@/components/FormModal';
+import { role } from '@/lib/data';
+import prisma from '@/lib/prisma';
+import { ITEMS_PER_PAGE } from '@/lib/settings';
 
 const columns = [
   { header: 'Info', accessor: 'info' },
@@ -15,64 +19,112 @@ const columns = [
   { header: 'Actions', accessor: 'actions', className: 'hidden md:table-cell' },
 ];
 
-type Student = {
-  id: number;
-  name: string;
-  photo: string;
-  email?: string;
-  studentId: string;
-  class: string;
-  phone: string;
-  address: string;
+type StudentList = Student & { class: Class };
+
+const renderRow = (student: StudentList) => {
+  return (
+    <tr
+      key={student.id}
+      className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
+    >
+      <td className="flex items-center gap-4 p-4">
+        <Image
+          src={student.img || '/noAvatar.png'}
+          alt={student.name}
+          width={40}
+          height={40}
+          className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
+        />
+        <div className="flex flex-col">
+          <h3 className="font-semibold ">{student.name}</h3>
+          <p className="text-xs text-gray-500">{student.email}</p>
+        </div>
+      </td>
+      <td className=" hidden md:table-cell">{student.username}</td>
+
+      <td className=" hidden md:table-cell">{student.class.name}</td>
+      <td className=" hidden md:table-cell">{student.phone}</td>
+      <td className=" hidden md:table-cell">{student.address}</td>
+      <td className="">
+        <div className="flex items-center gap-2">
+          {role === 'admin' && (
+            <Link href={`/list/students/${student.id}`}>
+              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+                <Image
+                  src="/view.png"
+                  alt="View"
+                  width={16}
+                  height={16}
+                  draggable={false}
+                  className="select-none"
+                />
+              </button>
+            </Link>
+          )}
+          {role === 'admin' && <FormModal table="student" type="delete" id={student.id} />}
+        </div>
+      </td>
+    </tr>
+  );
 };
 
-const StudentListPage = () => {
-  const renderRow = (student: Student) => {
-    return (
-      <tr
-        key={student.id}
-        className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
-      >
-        <td className="flex items-center gap-4 p-4">
-          <Image
-            src={student.photo}
-            alt={student.name}
-            width={40}
-            height={40}
-            className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
-          />
-          <div className="flex flex-col">
-            <h3 className="font-semibold ">{student.name}</h3>
-            <p className="text-xs text-gray-500">{student.email}</p>
-          </div>
-        </td>
-        <td className=" hidden md:table-cell">{student.studentId}</td>
+const StudentListPage = async ({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) => {
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(Array.isArray(page) ? page[0] : page) : 1;
 
-        <td className=" hidden md:table-cell">{student.class}</td>
-        <td className=" hidden md:table-cell">{student.phone}</td>
-        <td className=" hidden md:table-cell">{student.address}</td>
-        <td className="">
-          <div className="flex items-center gap-2">
-            {role === 'admin' && (
-              <Link href={`/list/students/${student.id}`}>
-                <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
-                  <Image
-                    src="/view.png"
-                    alt="View"
-                    width={16}
-                    height={16}
-                    draggable={false}
-                    className="select-none"
-                  />
-                </button>
-              </Link>
-            )}
-            {role === 'admin' && <FormModal table="student" type="delete" id={student.id} />}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+  // URL Params Conditions
+  const query: Prisma.StudentWhereInput = {};
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case 'teacherId':
+            query.class = {
+              lessons: {
+                some: {
+                  teacherId: value as string,
+                },
+              },
+            };
+            break;
+          case 'search':
+            query.name = { contains: value as string, mode: 'insensitive' };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  // ⚠️ Validar se página é um número válido
+  if (isNaN(p) || p < 1) {
+    redirect('/list/students');
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.student.findMany({
+      where: query,
+      include: {
+        class: true,
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (p - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.student.count({ where: query }),
+  ]);
+
+  // 🔒 Calcular total de páginas
+  const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+
+  // 🚫 Redirecionar se página não existe
+  if (p > totalPages && totalPages > 0) {
+    redirect('/list/students?page=' + totalPages);
+  }
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -109,11 +161,11 @@ const StudentListPage = () => {
 
       {/* LIST */}
       <div className="">
-        <Table columns={columns} renderRow={renderRow} data={studentsData} />
+        <Table columns={columns} renderRow={renderRow} data={data} />
       </div>
 
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={p} count={count} />
     </div>
   );
 };
