@@ -1,8 +1,8 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
 
 const TeacherForm = dynamic(() => import('./forms/TeacherForm'), {
   loading: () => <p>Loading...</p>,
@@ -37,7 +37,7 @@ const FormModal = ({
     | 'announcement';
   type: 'create' | 'update' | 'delete';
   data?: any;
-  id?: number;
+  id?: string | number;
 }) => {
   const size = type === 'create' ? 'w-8 h-8' : 'w-7 h-7';
   const bgColor =

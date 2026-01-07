@@ -4,20 +4,21 @@ export let role = 'admin'; // 'admin' | 'teacher' | 'student' | 'parent'
 
 // Subject color mapping for badges
 export const subjectColors: Record<string, { bg: string; text: string }> = {
-  Math: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  Geometry: { bg: 'bg-indigo-100', text: 'text-indigo-700' },
-  Physics: { bg: 'bg-purple-100', text: 'text-purple-700' },
-  Chemistry: { bg: 'bg-pink-100', text: 'text-pink-700' },
-  Biology: { bg: 'bg-green-100', text: 'text-green-700' },
-  History: { bg: 'bg-amber-100', text: 'text-amber-700' },
-  Geography: { bg: 'bg-teal-100', text: 'text-teal-700' },
-  English: { bg: 'bg-sky-100', text: 'text-sky-700' },
-  Spanish: { bg: 'bg-orange-100', text: 'text-orange-700' },
-  Literature: { bg: 'bg-violet-100', text: 'text-violet-700' },
-  Music: { bg: 'bg-fuchsia-100', text: 'text-fuchsia-700' },
   Art: { bg: 'bg-rose-100', text: 'text-rose-700' },
+  Biology: { bg: 'bg-green-100', text: 'text-green-700' },
+  Chemistry: { bg: 'bg-pink-100', text: 'text-pink-700' },
+  'Computer Science': { bg: 'bg-slate-100', text: 'text-slate-700' },
+  English: { bg: 'bg-sky-100', text: 'text-sky-700' },
+  Geography: { bg: 'bg-teal-100', text: 'text-teal-700' },
+  Geometry: { bg: 'bg-indigo-100', text: 'text-indigo-700' },
+  History: { bg: 'bg-amber-100', text: 'text-amber-700' },
+  Literature: { bg: 'bg-violet-100', text: 'text-violet-700' },
+  Mathematics: { bg: 'bg-blue-100', text: 'text-blue-700' },
+  Music: { bg: 'bg-fuchsia-100', text: 'text-fuchsia-700' },
+  Physics: { bg: 'bg-purple-100', text: 'text-purple-700' },
   Science: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
   'Social Studies': { bg: 'bg-lime-100', text: 'text-lime-700' },
+  Spanish: { bg: 'bg-orange-100', text: 'text-orange-700' },
 };
 
 // Default color for unmapped subjects
