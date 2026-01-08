@@ -5,17 +5,9 @@ import FormModal from '@/components/FormModal';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
-import { role } from '@/lib/data';
 import prisma from '@/lib/prisma';
 import { ITEMS_PER_PAGE } from '@/lib/settings';
-
-const columns = [
-  { header: 'Subject Name', accessor: 'name' },
-  { header: 'Class', accessor: 'class', className: 'hidden md:table-cell' },
-  { header: 'Teacher', accessor: 'teacher', className: 'hidden md:table-cell' },
-  { header: 'Date', accessor: 'date', className: 'hidden md:table-cell' },
-  { header: 'Actions', accessor: 'actions', className: 'hidden md:table-cell' },
-];
+import { currentUser } from '@/lib/utils';
 
 type ExamList = Exam & {
   lesson: {
@@ -25,59 +17,69 @@ type ExamList = Exam & {
   };
 };
 
-const renderRow = (item: ExamList) => {
-  return (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
-    >
-      <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
-      <td className=" hidden md:table-cell">{item.lesson.class.name}</td>
-      <td className=" hidden md:table-cell">
-        {item.lesson.teacher.name + ' ' + item.lesson.teacher.surname}
-      </td>
-      <td className=" hidden md:table-cell">
-        {new Intl.DateTimeFormat('en-US').format(item.startTime)}
-      </td>
-      <td className="">
-        <div className="flex items-center gap-2">
-          {role === 'admin' && (
-            <>
-              <FormModal table="exam" type="update" id={item.id} />
-              <FormModal table="exam" type="delete" id={item.id} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-};
-
 const LessonListPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
+  const { role, userId } = await currentUser();
+  const columns = [
+    { header: 'Subject Name', accessor: 'name' },
+    { header: 'Class', accessor: 'class', className: 'hidden md:table-cell' },
+    { header: 'Teacher', accessor: 'teacher', className: 'hidden md:table-cell' },
+    { header: 'Date', accessor: 'date', className: 'hidden md:table-cell' },
+    ...(role === 'admin' || role === 'teacher'
+      ? [{ header: 'Actions', accessor: 'actions', className: 'hidden md:table-cell' }]
+      : []),
+  ];
+
+  const renderRow = (item: ExamList) => {
+    return (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
+      >
+        <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
+        <td className=" hidden md:table-cell">{item.lesson.class.name}</td>
+        <td className=" hidden md:table-cell">
+          {item.lesson.teacher.name + ' ' + item.lesson.teacher.surname}
+        </td>
+        <td className=" hidden md:table-cell">
+          {new Intl.DateTimeFormat('en-US').format(item.startTime)}
+        </td>
+        <td className="">
+          <div className="flex items-center gap-2">
+            {(role === 'admin' || role === 'teacher') && (
+              <>
+                <FormModal table="exam" type="update" id={item.id} />
+                <FormModal table="exam" type="delete" id={item.id} />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
   const { page, ...queryParams } = searchParams;
   const p = page ? parseInt(Array.isArray(page) ? page[0] : page) : 1;
 
   // URL Params Conditions
   const query: Prisma.ExamWhereInput = {};
+  query.lesson = {};
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
           case 'classId':
-            query.lesson = { classId: parseInt(value as string) };
+            query.lesson!.classId = parseInt(value as string);
             break;
           case 'teacherId':
-            query.lesson = { teacherId: value as string };
+            query.lesson.teacherId = value as string;
             break;
           case 'search':
-            query.lesson = {
-              subject: {
-                name: { contains: value as string, mode: 'insensitive' },
-              },
+            query.lesson!.subject = {
+              name: { contains: value as string, mode: 'insensitive' },
             };
             break;
           default:
@@ -85,6 +87,25 @@ const LessonListPage = async ({
         }
       }
     }
+  }
+
+  // Role conditions
+  switch (role) {
+    case 'teacher':
+      query.lesson!.teacherId = userId;
+      break;
+    case 'student':
+      query.lesson.class = {
+        students: { some: { id: userId! } },
+      };
+      break;
+    case 'parent':
+      query.lesson = {
+        class: { students: { some: { parentId: userId! } } },
+      };
+      break;
+    default:
+      break;
   }
 
   // ⚠️ Validar se página é um número válido

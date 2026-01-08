@@ -5,49 +5,53 @@ import FormModal from '@/components/FormModal';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
-import { role } from '@/lib/data';
+import { ITEMS_PER_PAGE } from '@/lib/settings';
+import { currentUser } from '@/lib/utils';
 import prisma from '../../../../lib/prisma';
-import { ITEMS_PER_PAGE } from '../../../../lib/settings';
-
-const columns = [
-  { header: 'Announcement Title', accessor: 'title' },
-  { header: 'Class', accessor: 'class', className: 'hidden md:table-cell' },
-  { header: 'Date', accessor: 'date', className: 'hidden md:table-cell' },
-  { header: 'Actions', accessor: 'actions', className: 'hidden md:table-cell' },
-];
 
 type AnnouncementList = Announcement & { class: Class };
-
-const renderRow = (item: AnnouncementList) => {
-  return (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
-    >
-      <td className="flex items-center gap-4 p-4">{item.title}</td>
-      <td className=" hidden md:table-cell">{item.class?.name}</td>
-      <td className=" hidden md:table-cell">
-        {new Intl.DateTimeFormat('pt-BR').format(item.date)}
-      </td>
-      <td className="">
-        <div className="flex items-center gap-2">
-          {role === 'admin' && (
-            <>
-              <FormModal table="announcement" type="update" id={item.id} />
-              <FormModal table="announcement" type="delete" id={item.id} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-};
 
 const AnnouncementListPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
+  const { role, userId } = await currentUser();
+
+  const columns = [
+    { header: 'Announcement Title', accessor: 'title' },
+    { header: 'Class', accessor: 'class', className: 'hidden md:table-cell' },
+    { header: 'Date', accessor: 'date', className: 'hidden md:table-cell' },
+    ...(role === 'admin'
+      ? [{ header: 'Actions', accessor: 'actions', className: 'hidden md:table-cell' }]
+      : []),
+  ];
+
+  const renderRow = (item: AnnouncementList) => {
+    return (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 hover:bg-lamaPurpleLight transition-colors even:bg-slate-50 text-sm"
+      >
+        <td className="flex items-center gap-4 p-4">{item.title}</td>
+        <td className=" hidden md:table-cell">{item.class?.name || 'All'}</td>
+        <td className=" hidden md:table-cell">
+          {new Intl.DateTimeFormat('pt-BR').format(item.date)}
+        </td>
+        <td className="">
+          <div className="flex items-center gap-2">
+            {role === 'admin' && (
+              <>
+                <FormModal table="announcement" type="update" id={item.id} />
+                <FormModal table="announcement" type="delete" id={item.id} />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
   const { page, ...queryParams } = searchParams;
   const p = page ? parseInt(Array.isArray(page) ? page[0] : page) : 1;
 
@@ -64,6 +68,23 @@ const AnnouncementListPage = async ({
             break;
         }
       }
+    }
+  }
+
+  // Role conditions - filtra eventos baseado na role do usuário
+  // Admin vê todos, outras roles veem eventos globais + eventos das suas turmas
+  if (role !== 'admin') {
+    const roleConditions: Record<string, Prisma.ClassWhereInput> = {
+      teacher: { lessons: { some: { teacherId: userId! } } },
+      student: { students: { some: { id: userId! } } },
+      parent: { students: { some: { parentId: userId! } } },
+    };
+
+    if (role && roleConditions[role]) {
+      query.OR = [
+        { classId: null }, // Eventos globais
+        { class: roleConditions[role] }, // Eventos das turmas do usuário
+      ];
     }
   }
 
