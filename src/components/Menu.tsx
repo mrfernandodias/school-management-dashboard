@@ -1,7 +1,6 @@
+import { currentUser } from '@clerk/nextjs/server';
 import Image from 'next/image';
 import Link from 'next/link';
-
-import { role } from '@/lib/data';
 
 const menuItems = [
   {
@@ -118,7 +117,10 @@ const menuItems = [
   },
 ];
 
-const Menu = () => {
+const Menu = async () => {
+  const user = await currentUser();
+  const role = user?.publicMetadata?.role as string | undefined;
+
   return (
     <div className="mt-4 text-sm">
       {menuItems.map(section => (
@@ -127,7 +129,7 @@ const Menu = () => {
             {section.title}
           </span>
           {section.items.map(item => {
-            if (item.visible.includes(role)) {
+            if (item.visible.includes(role || '')) {
               return (
                 <Link
                   href={item.href}
