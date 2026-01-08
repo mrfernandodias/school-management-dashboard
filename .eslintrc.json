@@ -1,11 +1,13 @@
 {
   "extends": [
     "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript"
   ],
-  "plugins": ["import"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "import"],
   "rules": {
     "prettier/prettier": "warn",
     "react/no-unescaped-entities": "off",

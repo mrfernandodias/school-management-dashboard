@@ -14,6 +14,8 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@clerk/elements": "^0.24.3",
+    "@clerk/nextjs": "^6.36.6",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^6.19.1",
@@ -27,6 +29,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.69.0",
     "recharts": "^3.6.0",
+    "swr": "^2.3.8",
     "ts-node": "^10.9.2",
     "zod": "^4.2.1"
   },
