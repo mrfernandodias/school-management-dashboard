@@ -12,8 +12,14 @@ const EventCalendar = () => {
   const [value, onChange] = useState<Value>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const router = useRouter();
+
+  // Evita erro de hidratação - só renderiza o Calendar após montar no cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (value instanceof Date) {
@@ -36,9 +42,14 @@ const EventCalendar = () => {
     setSelectedDate(null);
   };
 
+  // Placeholder enquanto não monta no cliente (evita hydration mismatch)
+  if (!mounted) {
+    return <div className="bg-white p-4 rounded-md h-[300px]" />;
+  }
+
   return (
     <>
-      <Calendar onChange={onChange} value={value} />
+      <Calendar onChange={onChange} value={value} locale="en-US" />
       {/* Modal */}
       {isModalOpen && (
         <div
