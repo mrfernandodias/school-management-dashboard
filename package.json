@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "restart": "kill $(lsof -t -i:3000) 2>/dev/null; next dev",
     "lint": "next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
