@@ -29,13 +29,6 @@ const getDateForWeek = (
   return baseDate;
 };
 
-// Helper para criar data aleatória no mês atual
-const getRandomDateThisMonth = () => {
-  const today = new Date();
-  const day = Math.floor(Math.random() * 28) + 1;
-  return new Date(today.getFullYear(), today.getMonth(), day);
-};
-
 // Mapeia DayOfWeek para offset de dia
 const dayToOffset: Record<DayOfWeek, number> = {
   MONDAY: 0,
@@ -326,7 +319,8 @@ async function main() {
   }
   console.log('✅ Students criados');
 
-  // LESSON (60 aulas - distribuídas pelos dias da semana)
+  // LESSON - Cada professor tem no máximo 1 aula por slot de horário
+  // Garantimos que o professor padrão (teacher) tenha aulas em todos os dias
   const days = Object.values(DayOfWeek);
   const timeSlots = [
     { start: 8, end: 9 },
@@ -339,27 +333,94 @@ async function main() {
 
   const lessons = [];
   let lessonCount = 0;
+
+  // Rastreia quais slots cada professor já tem ocupados
+  // Formato: "teacherId-dayIndex-slotIndex"
+  const teacherSchedule = new Set<string>();
+
+  // PRIMEIRO: Criar aulas garantidas para o professor padrão (teacher) em todos os dias
+  const defaultTeacher = teacherNames[0]; // user_37wlElTyWRpcdlZHCzz1cOx8akS
+  const defaultTeacherSlots = [
+    { dayIndex: 0, slotIndex: 0 }, // Segunda 8h
+    { dayIndex: 0, slotIndex: 2 }, // Segunda 10h
+    { dayIndex: 1, slotIndex: 1 }, // Terça 9h
+    { dayIndex: 1, slotIndex: 3 }, // Terça 11h
+    { dayIndex: 2, slotIndex: 0 }, // Quarta 8h
+    { dayIndex: 2, slotIndex: 4 }, // Quarta 14h
+    { dayIndex: 3, slotIndex: 1 }, // Quinta 9h
+    { dayIndex: 3, slotIndex: 5 }, // Quinta 15h
+    { dayIndex: 4, slotIndex: 2 }, // Sexta 10h
+    { dayIndex: 4, slotIndex: 4 }, // Sexta 14h
+  ];
+
+  for (const { dayIndex, slotIndex } of defaultTeacherSlots) {
+    const day = days[dayIndex];
+    const slot = timeSlots[slotIndex];
+    const scheduleKey = `${defaultTeacher.id}-${dayIndex}-${slotIndex}`;
+    teacherSchedule.add(scheduleKey);
+
+    lessonCount++;
+    const lesson = await prisma.lesson.create({
+      data: {
+        name: `Aula ${lessonCount} - ${subjectNames[(lessonCount - 1) % subjectNames.length]} - ${classes[lessonCount % classes.length].name}`,
+        day,
+        startTime: getDateForDay(dayToOffset[day], slot.start),
+        endTime: getDateForDay(dayToOffset[day], slot.end),
+        subjectId: subjects[(lessonCount - 1) % subjects.length].id,
+        classId: classes[lessonCount % classes.length].id,
+        teacherId: defaultTeacher.id,
+      },
+    });
+    lessons.push(lesson);
+  }
+  console.log(`✅ ${lessonCount} aulas criadas para o professor padrão (teacher)`);
+
+  // SEGUNDO: Criar aulas para as demais turmas e professores
   for (let classIndex = 0; classIndex < classes.length; classIndex++) {
     const classRecord = classes[classIndex];
+
     for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
       const day = days[dayIndex];
-      const slot = timeSlots[dayIndex % timeSlots.length];
-      lessonCount++;
-      const lesson = await prisma.lesson.create({
-        data: {
-          name: `Aula ${lessonCount} - ${classRecord.name}`,
-          day,
-          startTime: getDateForDay(dayToOffset[day], slot.start),
-          endTime: getDateForDay(dayToOffset[day], slot.end),
-          subjectId: subjects[(lessonCount - 1) % subjects.length].id,
-          classId: classRecord.id,
-          teacherId: teacherNames[classIndex % teacherNames.length].id,
-        },
-      });
-      lessons.push(lesson);
+
+      // 3-4 aulas por dia por turma
+      const slotsForDay = dayIndex % 2 === 0 ? [0, 1, 2, 4] : [1, 2, 3, 5];
+
+      for (const slotIndex of slotsForDay) {
+        const slot = timeSlots[slotIndex];
+
+        // Encontrar um professor disponível (começando do índice 1 para variar mais)
+        let assignedTeacher = null;
+        for (let t = 0; t < teacherNames.length; t++) {
+          const teacherIndex = (classIndex + dayIndex + slotIndex + t + 1) % teacherNames.length;
+          const teacher = teacherNames[teacherIndex];
+          const scheduleKey = `${teacher.id}-${dayIndex}-${slotIndex}`;
+
+          if (!teacherSchedule.has(scheduleKey)) {
+            teacherSchedule.add(scheduleKey);
+            assignedTeacher = teacher;
+            break;
+          }
+        }
+
+        if (!assignedTeacher) continue;
+
+        lessonCount++;
+        const lesson = await prisma.lesson.create({
+          data: {
+            name: `Aula ${lessonCount} - ${subjectNames[(lessonCount - 1) % subjectNames.length]} - ${classRecord.name}`,
+            day,
+            startTime: getDateForDay(dayToOffset[day], slot.start),
+            endTime: getDateForDay(dayToOffset[day], slot.end),
+            subjectId: subjects[(lessonCount - 1) % subjects.length].id,
+            classId: classRecord.id,
+            teacherId: assignedTeacher.id,
+          },
+        });
+        lessons.push(lesson);
+      }
     }
   }
-  console.log('✅ Lessons criadas');
+  console.log(`✅ ${lessonCount} Lessons criadas no total (sem conflitos de horário)`);
 
   // EXAM (20 provas - na semana atual e próxima)
   const exams = [];
@@ -571,11 +632,11 @@ async function main() {
   console.log('   - 20 Teachers (professores)');
   console.log('   - 40 Parents (pais)');
   console.log('   - 80 Students (alunos)');
-  console.log('   - 60 Lessons (aulas)');
+  console.log(`   - ${lessons.length} Lessons (aulas - sem conflitos de horário)`);
   console.log('   - 20 Exams (provas)');
   console.log('   - 30 Assignments (trabalhos)');
   console.log('   - 200 Results (notas)');
-  console.log('   - 400 Attendance (presenças)');
+  console.log(`   - ${allStudentIds.length * 5} Attendance (presenças)`);
   console.log('   - 30 Events (eventos)');
   console.log('   - 25 Announcements (avisos)');
   console.log('');
