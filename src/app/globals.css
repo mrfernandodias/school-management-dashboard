@@ -97,6 +97,27 @@ body {
 }
 
 .rbc-time-header {
+  border-bottom: 1px solid #eee !important;
+  margin-bottom: 10px !important;
+}
+
+.rbc-time-header-content {
+  border-left: none !important;
+}
+
+.rbc-header {
+  padding: 10px 0 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: #374151 !important;
+  border-bottom: none !important;
+}
+
+.rbc-header + .rbc-header {
+  border-left: none !important;
+}
+
+.rbc-allday-cell {
   display: none !important;
 }
 
