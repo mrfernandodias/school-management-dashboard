@@ -1,25 +1,44 @@
-const announcements = [
-  {
-    id: 1,
-    title: 'Período de Matrículas Abertas',
-    date: '2025-01-15',
-    description: 'As matrículas para o próximo semestre estão abertas até 31 de janeiro.',
-  },
-  {
-    id: 2,
-    title: 'Atualização no Sistema de Notas',
-    date: '2025-01-10',
-    description: 'O sistema de notas passará por manutenção no dia 20/01 das 8h às 12h.',
-  },
-  {
-    id: 3,
-    title: 'Evento de Integração',
-    date: '2025-01-05',
-    description: 'Participe do evento de integração entre alunos e professores no dia 25/01.',
-  },
-];
+import { Prisma } from '@prisma/client';
+import prisma from '@/lib/prisma';
+import { currentUser } from '@/lib/utils';
 
-const Announcements = () => {
+const Announcements = async () => {
+  const { role, userId } = await currentUser();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Início do dia
+
+  // Construir query baseada na role
+  const query: Prisma.AnnouncementWhereInput = {
+    date: {
+      gte: today, // Avisos de hoje para frente (atuais e futuros)
+    },
+  };
+
+  if (role !== 'admin') {
+    // Outras roles veem: announcements globais OU da sua classe
+    const roleConditions: Record<string, Prisma.ClassWhereInput> = {
+      teacher: { lessons: { some: { teacherId: userId! } } },
+      student: { students: { some: { id: userId! } } },
+      parent: { students: { some: { parentId: userId! } } },
+    };
+
+    if (role && roleConditions[role]) {
+      query.OR = [
+        { classId: null }, // Announcements globais
+        { class: roleConditions[role] }, // Announcements da classe do usuário
+      ];
+    }
+  }
+  // Admin não tem filtro de role, vê todos os announcements
+
+  const data = await prisma.announcement.findMany({
+    where: query,
+    orderBy: {
+      date: 'asc', // Avisos mais próximos primeiro
+    },
+    take: 4,
+  });
+
   return (
     <div className="bg-white rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
@@ -27,7 +46,7 @@ const Announcements = () => {
         <span className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">View All</span>
       </div>
       <div className="flex flex-col gap-4">
-        {announcements.map(announcement => (
+        {data.map(announcement => (
           <div
             key={announcement.id}
             className="odd:bg-lamaSkyLight even:bg-lamaPurpleLight rounded-md p-4 hover:bg-opacity-80 transition-colors"
