@@ -1,7 +1,7 @@
 import { Class, Prisma, Teacher } from '@prisma/client';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import FormModal from '@/components/FormModal';
+import FormContainer from '@/components/FormContainer';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
@@ -44,8 +44,8 @@ const SubjectListPage = async ({
           <div className="flex items-center gap-2">
             {role === 'admin' && (
               <>
-                <FormModal table="class" type="update" id={item.id} />
-                <FormModal table="class" type="delete" id={item.id} />
+                <FormContainer table="class" type="update" data={item} />
+                <FormContainer table="class" type="delete" id={item.id} />
               </>
             )}
           </div>
@@ -129,7 +129,7 @@ const SubjectListPage = async ({
                 className="select-none"
               />
             </button>
-            {role === 'admin' && <FormModal table="class" type="create" />}
+            {role === 'admin' && <FormContainer table="class" type="create" />}
           </div>
         </div>
       </div>

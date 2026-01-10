@@ -2,7 +2,7 @@ import { Class, Prisma, Subject, Teacher } from '@prisma/client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import FormModal from '@/components/FormModal';
+import FormContainer from '@/components/FormContainer';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
@@ -95,7 +95,7 @@ const TeacherListPage = async ({
                 />
               </button>
             </Link>
-            {role === 'admin' && <FormModal table="teacher" type="delete" id={teacher.id} />}
+            {role === 'admin' && <FormContainer table="teacher" type="delete" id={teacher.id} />}
           </div>
         </td>
       </tr>
@@ -182,7 +182,7 @@ const TeacherListPage = async ({
                 className="select-none"
               />
             </button>
-            {role === 'admin' && <FormModal table="teacher" type="create" />}
+            {role === 'admin' && <FormContainer table="teacher" type="create" />}
           </div>
         </div>
       </div>

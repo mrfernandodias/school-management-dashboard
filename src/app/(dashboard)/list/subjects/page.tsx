@@ -1,13 +1,13 @@
 import { Prisma, Subject, Teacher } from '@prisma/client';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import FormModal from '@/components/FormModal';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
 import { ITEMS_PER_PAGE } from '@/lib/settings';
 import { currentUserRole } from '@/lib/utils';
 import prisma from '../../../../lib/prisma';
+import FormContainer from '@/components/FormContainer';
 
 type SubjectList = Subject & { teachers: Teacher[] };
 
@@ -38,8 +38,8 @@ const SubjectListPage = async ({
           <div className="flex items-center gap-2">
             {role === 'admin' && (
               <>
-                <FormModal table="subject" type="update" id={item.id} />
-                <FormModal table="subject" type="delete" id={item.id} />
+                <FormContainer table="subject" type="update" data={item} />
+                <FormContainer table="subject" type="delete" id={item.id} />
               </>
             )}
           </div>
@@ -70,7 +70,7 @@ const SubjectListPage = async ({
     redirect('/list/subjects');
   }
 
-  const [data, count] = await prisma.$transaction([
+  const [data, count, teachers] = await prisma.$transaction([
     prisma.subject.findMany({
       where: query,
       include: {
@@ -80,6 +80,9 @@ const SubjectListPage = async ({
       skip: (p - 1) * ITEMS_PER_PAGE,
     }),
     prisma.subject.count({ where: query }),
+    prisma.teacher.findMany({
+      select: { id: true, name: true, surname: true },
+    }),
   ]);
 
   // 🔒 Calcular total de páginas
@@ -118,7 +121,7 @@ const SubjectListPage = async ({
                 className="select-none"
               />
             </button>
-            {role === 'admin' && <FormModal table="subject" type="create" />}
+            {role === 'admin' && <FormContainer table="subject" type="create" />}
           </div>
         </div>
       </div>
