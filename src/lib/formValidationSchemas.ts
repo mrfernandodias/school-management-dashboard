@@ -36,7 +36,9 @@ export const teacherSchema = z.object({
   password: z
     .string()
     .min(6, 'Password must be at least 6 characters long')
-    .max(100, 'Password must be at most 100 characters long'),
+    .max(100, 'Password must be at most 100 characters long')
+    .optional()
+    .or(z.literal('')),
   name: z.string().min(1, 'First name is required'),
   surname: z.string().min(1, 'Last name is required'),
   phone: z
@@ -49,7 +51,7 @@ export const teacherSchema = z.object({
 
   birthday: z.coerce.date({ message: 'Birthday is required' }),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER'], { message: 'Gender is required' }),
-  img: z.string().optional(),
+  img: z.string().optional().nullable(),
   subjects: z.array(z.string()).optional(),
 });
 
