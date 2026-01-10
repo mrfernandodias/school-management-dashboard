@@ -1,11 +1,10 @@
-'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import Announcements from '@/components/Announcements';
 import BigCalendar from '@/components/BigCalendar';
 import Performance from '@/components/Performance';
 
-const SingleStudentPage = () => {
+const SingleStudentPage = async ({ params: { id } }: { params: { id: string } }) => {
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
       {/* LEFT */}
@@ -145,7 +144,7 @@ const SingleStudentPage = () => {
         <div className="mt-4 h-[800px] bg-white p-4 rounded-md flex flex-col">
           <h1 className="text-xl font-semibold mb-4">Student's Schedule</h1>
           <div className="flex-1">
-            <BigCalendar />
+            <BigCalendar data={[]} />
           </div>
         </div>
       </div>

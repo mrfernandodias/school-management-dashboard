@@ -4,8 +4,32 @@ import Announcements from '@/components/Announcements';
 import BigCalendar from '@/components/BigCalendar';
 import FormContainer from '@/components/FormContainer';
 import Performance from '@/components/Performance';
+import prisma from '@/lib/prisma';
+import { Teacher } from '@prisma/client';
+import { notFound } from 'next/dist/client/components/not-found';
+import { currentUserRole } from '@/lib/utils';
 
-const SingleTeacherPage = async () => {
+const SingleTeacherPage = async ({ params: { id } }: { params: { id: string } }) => {
+  const role = await currentUserRole();
+  const teacher:
+    | (Teacher & { _count: { subjects: number; lessons: number; classes: number } })
+    | null = await prisma.teacher.findUnique({
+    where: { id },
+    include: {
+      subjects: true,
+      _count: {
+        select: {
+          subjects: true,
+          lessons: true,
+          classes: true,
+        },
+      },
+    },
+  });
+
+  if (!teacher) {
+    return notFound();
+  }
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
       {/* LEFT */}
@@ -16,7 +40,7 @@ const SingleTeacherPage = async () => {
           <div className="bg-lamaSky py-6 px-4 rounded-md flex-1 flex gap-4">
             <div className="w-1/3">
               <Image
-                src="https://images.pexels.com/photos/2888150/pexels-photo-2888150.jpeg?auto=compress&cs=tinysrgb&w=1200"
+                src={teacher.img || '/noAvatar.png'}
                 alt="Teacher"
                 width={144}
                 height={144}
@@ -26,25 +50,8 @@ const SingleTeacherPage = async () => {
             </div>
             <div className="w-2/3 flex flex-col justify-between gap-4">
               <div className="flex items-center gap-4">
-                <h1 className="text-lg font-semibold">Leonard Snyder</h1>
-                <FormContainer
-                  table="teacher"
-                  type="update"
-                  data={{
-                    id: 1,
-                    username: 'john-doe',
-                    email: 'john@doe.com',
-                    password: 'password',
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    phone: '+1 234 567 89',
-                    address: '123 Main St, Anytown, USA',
-                    bloodType: 'A+',
-                    birthday: '1990-01-01',
-                    gender: 'male',
-                    img: 'https://images.pexels.com/photos/2888150/pexels-photo-2888150.jpeg?auto=compress&cs=tinysrgb&w=1200',
-                  }}
-                />
+                <h1 className="text-lg font-semibold">{teacher.name + ' ' + teacher.surname}</h1>
+                {role === 'admin' && <FormContainer table="teacher" type="update" data={teacher} />}
               </div>
               <p className="text-sm text-gray-500">
                 Lorem ipsum dolor sit amet consectetur adipisicing elit.
@@ -59,7 +66,7 @@ const SingleTeacherPage = async () => {
                     draggable={false}
                     className="select-none"
                   />
-                  <span>A+</span>
+                  <span>{teacher.bloodType}</span>
                 </div>
                 <div className="w-full md:w-1/3 flex items-center gap-2 lg:w-full 2xl:w-1/3">
                   <Image
@@ -70,7 +77,7 @@ const SingleTeacherPage = async () => {
                     draggable={false}
                     className="select-none"
                   />
-                  <span>January 2025</span>
+                  <span>{new Intl.DateTimeFormat('pt-BR').format(teacher.birthday)}</span>
                 </div>
                 <div className="w-full md:w-1/3 flex items-center gap-2 lg:w-full 2xl:w-1/3">
                   <Image
@@ -81,7 +88,7 @@ const SingleTeacherPage = async () => {
                     draggable={false}
                     className="select-none"
                   />
-                  <span>user@gmail.com</span>
+                  <span>{teacher.email || '-'}</span>
                 </div>
                 <div className="w-full md:w-1/3 flex items-center gap-2 lg:w-full 2xl:w-1/3">
                   <Image
@@ -92,7 +99,7 @@ const SingleTeacherPage = async () => {
                     draggable={false}
                     className="select-none"
                   />
-                  <span>+1 234 567</span>
+                  <span>{teacher.phone || '-'}</span>
                 </div>
               </div>
             </div>
@@ -125,7 +132,7 @@ const SingleTeacherPage = async () => {
                 className="w-6 h-6 select-none"
               />
               <div>
-                <h1 className="text-lg font-semibold">2</h1>
+                <h1 className="text-lg font-semibold">{teacher._count.subjects}</h1>
                 <span className="text-sm text-gray-400">Branches</span>
               </div>
             </div>
@@ -140,7 +147,7 @@ const SingleTeacherPage = async () => {
                 className="w-6 h-6 select-none"
               />
               <div>
-                <h1 className="text-lg font-semibold">6</h1>
+                <h1 className="text-lg font-semibold">{teacher._count.lessons}</h1>
                 <span className="text-sm text-gray-400">Lessons</span>
               </div>
             </div>
@@ -155,7 +162,7 @@ const SingleTeacherPage = async () => {
                 className="w-6 h-6 select-none"
               />
               <div>
-                <h1 className="text-lg font-semibold">6</h1>
+                <h1 className="text-lg font-semibold">{teacher._count.classes}</h1>
                 <span className="text-sm text-gray-400">Classes</span>
               </div>
             </div>
