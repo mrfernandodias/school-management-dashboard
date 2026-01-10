@@ -152,8 +152,19 @@ export const updateTeacher = async (currentState: CurrentState, data: TeacherSch
       return { success: false, error: true };
     }
 
-    const { id, subjects, ...teacherData } = data;
+    const { id, subjects, password, ...teacherData } = data;
 
+    // Atualiza o usuário no Clerk
+    const clerk = await clerkClient();
+    await clerk.users.updateUser(id, {
+      username: data.username,
+      firstName: data.name,
+      lastName: data.surname,
+      // Só atualiza o password se foi informado
+      ...(password && password.length > 0 && { password }),
+    });
+
+    // Atualiza o professor no banco
     await prisma.teacher.update({
       where: { id },
       data: {
@@ -179,8 +190,11 @@ export const updateTeacher = async (currentState: CurrentState, data: TeacherSch
 export const deleteTeacher = async (currentState: CurrentState, data: FormData) => {
   const id = data.get('id') as string;
   try {
+    const clerk = await clerkClient();
+    await clerk.users.deleteUser(id);
+
     await prisma.teacher.delete({
-      where: { id }, // Teacher.id é string, não precisa de parseInt
+      where: { id },
     });
 
     return { success: true, error: false };
