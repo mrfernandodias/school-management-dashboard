@@ -89,3 +89,17 @@ export const studentSchema = z.object({
 });
 
 export type StudentSchemaFormData = z.infer<typeof studentSchema>;
+
+export const examSchema = z.object({
+  id: z.coerce.number().optional(),
+  title: z
+    .string()
+    .min(1, 'Title name is required!')
+    .max(20, 'Title name must be at most 20 characters long'),
+  startTime: z.coerce.date('Start time is required'),
+  endTime: z.coerce.date('Start time is required'),
+  lessonId: z.coerce.number('Lesson is required'),
+});
+
+// Tipo de OUTPUT (após validação/coerção) - usado nas actions
+export type ExamSchemaFormData = z.infer<typeof examSchema>;
