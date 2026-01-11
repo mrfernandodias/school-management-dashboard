@@ -1,7 +1,7 @@
 import { Class, Exam, Prisma, Subject, Teacher } from '@prisma/client';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import FormModal from '@/components/FormModal';
+import FormContainer from '@/components/FormContainer';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
@@ -17,7 +17,7 @@ type ExamList = Exam & {
   };
 };
 
-const LessonListPage = async ({
+const ExamListPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -51,8 +51,8 @@ const LessonListPage = async ({
           <div className="flex items-center gap-2">
             {(role === 'admin' || role === 'teacher') && (
               <>
-                <FormModal table="exam" type="update" id={item.id} />
-                <FormModal table="exam" type="delete" id={item.id} />
+                <FormContainer table="exam" type="update" id={item.id} data={item} />
+                <FormContainer table="exam" type="delete" id={item.id} />
               </>
             )}
           </div>
@@ -167,7 +167,8 @@ const LessonListPage = async ({
                 className="select-none"
               />
             </button>
-            {role === 'admin' && <FormModal table="exam" type="create" />}
+            {role === 'admin' ||
+              (role === 'teacher' && <FormContainer table="exam" type="create" />)}
           </div>
         </div>
       </div>
@@ -181,4 +182,4 @@ const LessonListPage = async ({
   );
 };
 
-export default LessonListPage;
+export default ExamListPage;
