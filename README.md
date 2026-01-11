@@ -1,6 +1,13 @@
 # School Management Dashboard
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-repo/dashboard_ui)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://school-management-dashboard-theta.vercel.app)
+
+🔗 **Live Demo
+**: [https://school-management-dashboard-theta.vercel.app](https://school-management-dashboard-theta.vercel.app)
+
 A full-stack school management system built with Next.js 14, Prisma, PostgreSQL, and Clerk authentication. Features
+role-based dashboards for administrators, teachers, students, and parents.
 role-based dashboards for administrators, teachers, students, and parents.
 
 ## Overview
