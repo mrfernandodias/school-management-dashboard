@@ -4,7 +4,13 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useFormState } from 'react-dom';
-import { deleteClass, deleteStudent, deleteSubject, deleteTeacher } from '@/lib/actions';
+import {
+  deleteClass,
+  deleteExam,
+  deleteStudent,
+  deleteSubject,
+  deleteTeacher,
+} from '@/lib/actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { FormContainerProps } from '@/components/FormContainer';
@@ -19,6 +25,7 @@ const deleteActionMap: { [key: string]: DeleteAction } = {
   class: deleteClass,
   teacher: deleteTeacher,
   student: deleteStudent,
+  exam: deleteExam,
   // Adicionar outras actions conforme implementar:
   // teacher: deleteTeacher,
   // student: deleteStudent,
@@ -35,6 +42,10 @@ const SubjectForm = dynamic(() => import('./forms/SubjectForm'), {
   loading: () => <p>Loading...</p>,
 });
 const ClassForm = dynamic(() => import('./forms/ClassForm'), {
+  loading: () => <p>Loading...</p>,
+});
+
+const ExamForm = dynamic(() => import('./forms/ExamForm'), {
   loading: () => <p>Loading...</p>,
 });
 
@@ -57,6 +68,9 @@ const forms: {
   ),
   class: (type, setOpen, data, relatedData) => (
     <ClassForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  exam: (type, setOpen, data, relatedData) => (
+    <ExamForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
 };
 

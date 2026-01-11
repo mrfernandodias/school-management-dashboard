@@ -1,5 +1,6 @@
 import FormModal from '@/components/FormModal';
 import prisma from '@/lib/prisma';
+import { currentUser } from '@/lib/utils';
 
 export type FormContainerProps = {
   table:
@@ -57,6 +58,28 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         });
 
         relatedData = { grades: studentGrades, classes: studentClasses };
+        break;
+      case 'exam':
+        const { role, userId } = await currentUser();
+
+        // Se for update e tiver id, buscar os dados do exam
+        if (type === 'update' && id) {
+          data = await prisma.exam.findUnique({
+            where: { id: Number(id) },
+          });
+        }
+
+        const examLessons = await prisma.lesson.findMany({
+          where: {
+            ...(role === 'teacher' ? { teacherId: userId! } : {}),
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        });
+
+        relatedData = { lessons: examLessons };
         break;
       default:
         break;
