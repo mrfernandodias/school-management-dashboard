@@ -1,6 +1,11 @@
 'use server';
 
-import { ClassSchemaFormData, SubjectSchemaFormData, TeacherSchemaFormData, } from '@/lib/formValidationSchemas';
+import {
+  ClassSchemaFormData,
+  StudentSchemaFormData,
+  SubjectSchemaFormData,
+  TeacherSchemaFormData,
+} from '@/lib/formValidationSchemas';
 import prisma from '@/lib/prisma';
 import { clerkClient } from '@clerk/nextjs/server';
 
@@ -194,6 +199,110 @@ export const deleteTeacher = async (currentState: CurrentState, data: FormData) 
     await clerk.users.deleteUser(id);
 
     await prisma.teacher.delete({
+      where: { id },
+    });
+
+    return { success: true, error: false };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: true };
+  }
+};
+export const createStudent = async (currentState: CurrentState, data: StudentSchemaFormData) => {
+  try {
+    const classItem = await prisma.class.findUnique({
+      where: { id: data.classId },
+      include: { _count: { select: { students: true } } },
+    });
+
+    if (!classItem || classItem._count.students >= classItem.capacity) {
+      return { success: false, error: true };
+    }
+
+    const clerk = await clerkClient();
+    const user = await clerk.users.createUser({
+      username: data.username,
+      password: data.password,
+      firstName: data.name,
+      lastName: data.surname,
+      publicMetadata: { role: 'student' },
+    });
+
+    await prisma.student.create({
+      data: {
+        id: user.id,
+        username: data.username,
+        email: data.email || '',
+        name: data.name,
+        surname: data.surname,
+        phone: data.phone || null,
+        address: data.address || null,
+        bloodType: data.bloodType || '',
+        birthday: data.birthday,
+        gender: data.gender,
+        img: data.img || null,
+        gradeId: data.gradeId,
+        classId: data.classId,
+        parentId: data.parentId,
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: true };
+  }
+};
+
+export const updateStudent = async (currentState: CurrentState, data: StudentSchemaFormData) => {
+  try {
+    if (!data.id) {
+      console.error('updateStudent: id is missing');
+      return { success: false, error: true };
+    }
+
+    const { id, password, ...studentData } = data;
+
+    // Atualiza o usuário no Clerk
+    const clerk = await clerkClient();
+    await clerk.users.updateUser(id, {
+      username: data.username,
+      firstName: data.name,
+      lastName: data.surname,
+      // Só atualiza o password se foi informado
+      ...(password && password.length > 0 && { password }),
+    });
+
+    // Atualiza o professor no banco
+    await prisma.student.update({
+      where: { id },
+      data: {
+        ...studentData,
+        email: data.email || '',
+        phone: data.phone || null,
+        address: data.address || null,
+        bloodType: data.bloodType || '',
+        img: data.img || null,
+        gradeId: data.gradeId,
+        classId: data.classId,
+        parentId: data.parentId,
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: true };
+  }
+};
+
+export const deleteStudent = async (currentState: CurrentState, data: FormData) => {
+  const id = data.get('id') as string;
+  try {
+    const clerk = await clerkClient();
+    await clerk.users.deleteUser(id);
+
+    await prisma.student.delete({
       where: { id },
     });
 
