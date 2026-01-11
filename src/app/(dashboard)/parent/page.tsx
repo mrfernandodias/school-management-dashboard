@@ -1,6 +1,5 @@
 import Announcements from '@/components/Announcements';
-import BigCalendar from '@/components/BigCalendar';
-import EventCalendar from '@/components/EventCalendar';
+import BigCalendarContainer from '@/components/BigCalendarContainer';
 
 const ParentPage = () => {
   return (
@@ -10,7 +9,7 @@ const ParentPage = () => {
         <div className="h-[800px] bg-white p-4 rounded-md flex flex-col">
           <h1 className="text-xl font-semibold mb-4">Schedule (John Doe)</h1>
           <div className="flex-1">
-            <BigCalendar />
+            <BigCalendarContainer type="classId" id={1} />
           </div>
         </div>
       </div>
