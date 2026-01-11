@@ -1,13 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Announcements from '@/components/Announcements';
-import BigCalendar from '@/components/BigCalendar';
 import FormContainer from '@/components/FormContainer';
 import Performance from '@/components/Performance';
 import prisma from '@/lib/prisma';
 import { Teacher } from '@prisma/client';
 import { notFound } from 'next/dist/client/components/not-found';
 import { currentUserRole } from '@/lib/utils';
+import BigCalendarContainer from '@/components/BigCalendarContainer';
 
 const SingleTeacherPage = async ({ params: { id } }: { params: { id: string } }) => {
   const role = await currentUserRole();
@@ -172,7 +172,7 @@ const SingleTeacherPage = async ({ params: { id } }: { params: { id: string } })
         <div className="mt-4 h-[800px] bg-white p-4 rounded-md flex flex-col">
           <h1 className="text-xl font-semibold mb-4">Teacher&apos;s Schedule</h1>
           <div className="flex-1">
-            <BigCalendar data={[]} />
+            <BigCalendarContainer type="teacherId" id={teacher.id} />
           </div>
         </div>
       </div>

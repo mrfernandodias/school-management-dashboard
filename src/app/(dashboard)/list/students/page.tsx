@@ -2,13 +2,13 @@ import { Class, Prisma, Student } from '@prisma/client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import FormModal from '@/components/FormModal';
+import FormContainer from '@/components/FormContainer';
 import Pagination from '@/components/Pagination';
 import Table from '@/components/Table';
 import TableSearch from '@/components/TableSearch';
 import prisma from '@/lib/prisma';
 import { ITEMS_PER_PAGE } from '@/lib/settings';
-import { currentUserRole } from '@/lib/utils';
+import { currentUser } from '@/lib/utils';
 
 type StudentList = Student & { class: Class };
 
@@ -17,7 +17,7 @@ const StudentListPage = async ({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
-  const role = await currentUserRole();
+  const { role, userId } = await currentUser();
 
   const columns = [
     { header: 'Info', accessor: 'info' },
@@ -70,7 +70,7 @@ const StudentListPage = async ({
                 </button>
               </Link>
             )}
-            {role === 'admin' && <FormModal table="student" type="delete" id={student.id} />}
+            {role === 'admin' && <FormContainer table="student" type="delete" id={student.id} />}
           </div>
         </td>
       </tr>
@@ -158,7 +158,7 @@ const StudentListPage = async ({
                 className="select-none"
               />
             </button>
-            {role === 'admin' && <FormModal table="student" type="create" />}
+            {role === 'admin' && <FormContainer table="student" type="create" />}
           </div>
         </div>
       </div>
