@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useFormState } from 'react-dom';
-import { deleteClass, deleteSubject, deleteTeacher } from '@/lib/actions';
+import { deleteClass, deleteStudent, deleteSubject, deleteTeacher } from '@/lib/actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { FormContainerProps } from '@/components/FormContainer';
@@ -18,6 +18,7 @@ const deleteActionMap: { [key: string]: DeleteAction } = {
   subject: deleteSubject,
   class: deleteClass,
   teacher: deleteTeacher,
+  student: deleteStudent,
   // Adicionar outras actions conforme implementar:
   // teacher: deleteTeacher,
   // student: deleteStudent,
@@ -48,9 +49,9 @@ const forms: {
   teacher: (type, setOpen, data, relatedData) => (
     <TeacherForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
-  // student: (type, setOpen, data, relatedData) => (
-  //   <StudentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
-  // ),
+  student: (type, setOpen, data, relatedData) => (
+    <StudentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
   subject: (type, setOpen, data, relatedData) => (
     <SubjectForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
@@ -81,7 +82,7 @@ const FormModal = ({
     const router = useRouter();
     useEffect(() => {
       if (state.success) {
-        toast(`Subject has been deleted`);
+        toast(`${table} has been deleted`);
         setOpen(false);
         router.refresh();
       }
