@@ -2,12 +2,14 @@
 
 import {
   ClassSchemaFormData,
+  ExamSchemaFormData,
   StudentSchemaFormData,
   SubjectSchemaFormData,
   TeacherSchemaFormData,
 } from '@/lib/formValidationSchemas';
 import prisma from '@/lib/prisma';
 import { clerkClient } from '@clerk/nextjs/server';
+import { currentUser } from '@/lib/utils';
 
 type CurrentState = { success: boolean; error: boolean };
 
@@ -304,6 +306,100 @@ export const deleteStudent = async (currentState: CurrentState, data: FormData) 
 
     await prisma.student.delete({
       where: { id },
+    });
+
+    return { success: true, error: false };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: true };
+  }
+};
+
+export const createExam = async (currentState: CurrentState, data: ExamSchemaFormData) => {
+  const { role, userId } = await currentUser();
+
+  try {
+    if (role === 'teacher') {
+      const teacherLesson = await prisma.lesson.findFirst({
+        where: {
+          teacherId: userId!,
+          id: data.lessonId,
+        },
+      });
+
+      if (!teacherLesson) {
+        return { success: false, error: true };
+      }
+    }
+
+    await prisma.exam.create({
+      data: {
+        title: data.title,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        lessonId: data.lessonId,
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: true };
+  }
+};
+
+export const updateExam = async (currentState: CurrentState, data: ExamSchemaFormData) => {
+  const { role, userId } = await currentUser();
+
+  try {
+    if (!data.id) {
+      console.error('updateExam: id is missing');
+      return { success: false, error: true };
+    }
+
+    if (role === 'teacher') {
+      const teacherLesson = await prisma.lesson.findFirst({
+        where: {
+          teacherId: userId!,
+          id: data.lessonId,
+        },
+      });
+
+      if (!teacherLesson) {
+        return { success: false, error: true };
+      }
+    }
+
+    await prisma.exam.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        title: data.title,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        lessonId: data.lessonId,
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: true };
+  }
+};
+
+export const deleteExam = async (currentState: CurrentState, data: FormData) => {
+  const id = data.get('id') as string;
+
+  const { role, userId } = await currentUser();
+
+  try {
+    await prisma.exam.delete({
+      where: {
+        id: parseInt(id),
+        ...(role === 'teacher' ? { lesson: { teacherId: userId! } } : {}),
+      },
     });
 
     return { success: true, error: false };
